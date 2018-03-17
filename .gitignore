@@ -1,0 +1,9 @@
+# Created by .ignore support plugin (hsz.mobi)
+
+.idea/
+**/.DS_Store
+src/.ipynb_checkpoints/
+src/__pycache__
+
+# venv
+survey_analysis/
