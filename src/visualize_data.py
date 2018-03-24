@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import OrderedDict
 from operator import itemgetter
+from tabulate import tabulate
 
 from config import OUTPUT_PATH
 from translation import EDUCATION_DICT
@@ -37,7 +38,7 @@ def plot_piechart(category, title, output_filename, sort_dict=None):
         sorted_data = [(i[0], i[1]) for i in sorted(data_items_with_order_parameter, key=itemgetter(2))]
         data = OrderedDict(sorted_data)
 
-    fracs = [f/sum(data.values()) for f in data.values()]
+    fracs = [f / sum(data.values()) for f in data.values()]
     explode = (0, 0.3, 0, 0, 0.3)
 
     plt.pie(data.values(), autopct='%1.1f%%', explode=explode, pctdistance=1.2)
@@ -47,6 +48,37 @@ def plot_piechart(category, title, output_filename, sort_dict=None):
 
     plt.savefig(os.path.join(OUTPUT_PATH, output_filename))
     plt.show()
+
+
+def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png'):
+    labels = ['preceding', 'truetemp mean', 'truetemp std']
+
+    preceding_data = []
+    for group, answers in data.items():
+        preceding_data.append([group, np.mean(answers), np.var(answers)])
+
+    print(tabulate(preceding_data, labels))
+
+    answer = [d[1] for d in preceding_data]
+    std = [d[2] for d in preceding_data]
+
+    plt.figure(figsize=(10, 7), dpi=300)
+    plt.errorbar(range(3), answer, yerr=std, fmt='o', capsize=4)
+    plt.xticks(range(3), ('M-T', 'T-(M/C)', 'C-T'), fontsize=12)
+    plt.grid(True)
+
+    plt.title('Średnia odpowiedź na Truetemp w różnych wersjach ankiety', fontsize=20, y=1.05)
+    plt.xlabel('Wersja ankiety\n(M-Moneta, T-Truetemp, C-Chemiczka)', fontsize=15)
+    plt.ylabel('Średni wynik Truetempa\n(-1.0-nie zgadzam się, 1.0-zgadzam się)', fontsize=15)
+
+    annotation_positions = ((.1, .1), (.1, .1), (-.53, -.05))
+    d = 0.1
+    for x, y, s, a in zip(range(3), answer, std, annotation_positions):
+        plt.annotate('{:.3f} $\pm$ {:.3f}'.format(y, s), xy=[x + d, y + d], fontsize=12)
+
+    plt.ylim(-2, 2)
+    plt.xlim(-.1, 2.1)
+    plt.savefig(os.path.join(OUTPUT_PATH, filename))
 
 
 if __name__ == '__main__':
