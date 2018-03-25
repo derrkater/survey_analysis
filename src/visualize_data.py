@@ -6,7 +6,7 @@ from operator import itemgetter
 from tabulate import tabulate
 
 from config import OUTPUT_PATH
-from translation import EDUCATION_DICT
+from translation import EDUCATION_DICT_PL
 
 from analyze_data import load_data, get_values_histograms_dict
 

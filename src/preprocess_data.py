@@ -1,75 +1,109 @@
-import csv, glob, os, json, re
-from collections import defaultdict
+import re, glob, os
+import pandas as pd
 
-from config import DATA_PATH, REMOVE_CATEGORIES, FILTER_OUT_LOW_PHILOSOPHY_KNOWLEDGE
-from translation import SCORE_DICT, TIME_DICT
-
-
-def is_survey_finished(interviewee):
-    if interviewee and 'lastpage' in interviewee and interviewee['lastpage'] == '3':
-        interviewee.pop('lastpage')
-        return True
+from config import DATA_PATH
 
 
-def unify_question_categories_and_answers(interviewee, q1, q2):
-    interviewee['q1'] = SCORE_DICT[interviewee.pop(q1)]
-    interviewee['q2'] = SCORE_DICT[interviewee.pop(q2)]
+def browse_data(df):
+    print(df.columns)
+
+    possible_values = {column: df[column].unique() for column in df.columns}
+    for column, values in possible_values.items():
+        if len(values) < 7:
+            print(column, values)
+        else:
+            try:
+                print(column, min(values), max(values))
+            except:
+                print('ERROR', column, values)
 
 
-def has_low_philosophy_knowledge(interviewee):
-    return 'filozofia2' in interviewee
+def preprocess_initial(df, language):
+    from config import COLUMNS_TO_DROP_EN
+    from translation import get_score_dict, get_education_dict, RENAMING_DICT_EN, BOOLEAN_DICT_EN
+
+    SCORE_DICT = get_score_dict(language)
+    EDUCATION_DICT = get_education_dict(language)
+    RENAMING_DICT = RENAMING_DICT_EN
+    BOOLEAN_DICT = BOOLEAN_DICT_EN
+    COLUMNS_TO_DROP = COLUMNS_TO_DROP_EN
+
+    return df.rename(columns=RENAMING_DICT) \
+        .dropna(axis=1) \
+        .drop(columns=COLUMNS_TO_DROP) \
+        .applymap(lambda x: SCORE_DICT.get(x, x)) \
+        .applymap(lambda x: BOOLEAN_DICT.get(x, x)) \
+        .applymap(lambda x: EDUCATION_DICT.get(x, x))
 
 
-def remove_philosophy(interviewee):
-    if 'filozofia' in interviewee: interviewee.pop('filozofia')
-    if 'filozofia2' in interviewee: interviewee.pop('filozofia2')
+def preprocess_control_questions(df, control_1, control_2):
+    df = df[df[control_1]]
+    df = df[df[control_2]]
+    return df.drop(columns=[control_1, control_2])
 
 
-def preprocess_times(interviewee):
-    # preprocess survey duration times
-    times_regex = re.compile('groupTime.*|interviewtime')
-    times = filter(times_regex.match, interviewee.keys())
-    for time in times:
-        interviewee[TIME_DICT[time]] = float(interviewee.pop(time))
-
-    # preprocess birth year of interviewee
-    interviewee['rok'] = int(interviewee['rok'])
+def preprocess_not_active(df):
+    df = df[df.native_speaker]
+    return df.drop(columns=['native_speaker'])
 
 
-def read_data():
-    files = glob.glob(os.path.join(DATA_PATH, '**/*.csv'))
+def preprocess_by_interviewee_age(df, year_min, year_max):
+    return df[df.year < year_max][df.year > year_min]
 
-    data = defaultdict(lambda: dict())
 
+def preprocess_by_interview_time(df, interview_time_threshold):
+    return df[df.interviewtime > interview_time_threshold]
+
+
+def preprocess_times(df, story_1, story_2):
+    times_regex = re.compile('groupTime.*')
+    times = list(filter(times_regex.match, df.columns))
+    interviewee_info_time, task_info_time_1, question_time_1, task_info_time_2, question_time_2 = times
+
+    time_renaming_dict = {
+        interviewee_info_time: 'interviewee_info_time',
+        question_time_1: '{}_time'.format(story_1),
+        question_time_2: '{}_time'.format(story_2)
+    }
+
+    return df.rename(columns=time_renaming_dict) \
+        .drop(columns=[task_info_time_1, task_info_time_2])
+
+
+def preprocess(df, language):
+    from config import TIME_THRESHOLD_EN, MIN_YEAR, MAX_YEAR
+    time_threshold = TIME_THRESHOLD_EN
+
+    df = preprocess_initial(df, language)
+
+    control_1, knowledge_1, control_2, knowledge_2 = df.columns[5:9]
+    person_1 = knowledge_1.replace('Know', '')
+    person_2 = knowledge_2.replace('Know', '')
+
+    df = preprocess_control_questions(df, control_1, control_2)
+    df = preprocess_not_active(df)
+    df = preprocess_by_interviewee_age(df, MIN_YEAR, MAX_YEAR)
+    df = preprocess_by_interview_time(df, time_threshold)
+    df = preprocess_times(df, person_1, person_2)
+
+    return df, person_1, person_2
+
+
+def preprocess_pipeline(language, verbose=False):
+    files = glob.glob(os.path.join(DATA_PATH, language, '**/*.csv'))
+
+    truetemp_data = dict()
+    dfs = dict()
     for file in files:
-        with open(file, 'r', encoding='utf-8') as f:  # iso-8859-1
-            reader = csv.reader(f)
-            group_data = []
+        df = pd.read_csv(file)
+        df, person_1, person_2 = preprocess(df, 'en')
 
-            headers = next(reader)
-            print('headers: {}'.format(headers))
-            q1, q2 = headers[8:10]
-            group_id = '-'.join(headers[8:10])
+        if verbose:
+            browse_data(df)
 
-            for line in reader:
-                interviewee = {key: val for key, val in zip(headers, line) if val and key not in REMOVE_CATEGORIES}
-                is_not_philosopher = not (
-                            FILTER_OUT_LOW_PHILOSOPHY_KNOWLEDGE and has_low_philosophy_knowledge(interviewee))
-                if is_survey_finished(interviewee) and is_not_philosopher:
-                    unify_question_categories_and_answers(interviewee, q1, q2)
-                    preprocess_times(interviewee)
-                    remove_philosophy(interviewee)
+        interview = '{}-{}'.format(person_1, person_2)
 
-                    if interviewee['rok'] > 1918:
-                        group_data.append(interviewee)
+        truetemp_data[interview] = list(df.TruetempKnow)
+        dfs[interview] = df
 
-            data[group_id] = group_data
-
-    return data
-
-
-if __name__ == '__main__':
-    data = read_data()
-
-    with open(os.path.join(DATA_PATH, 'data.json'), 'w+') as file:
-        json.dump(data, file, indent=4, ensure_ascii=False)
+    return dfs, truetemp_data
