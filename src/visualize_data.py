@@ -11,7 +11,7 @@ from translation import EDUCATION_DICT_PL
 from analyze_data import load_data, get_values_histograms_dict
 
 
-def plot_histogram(category, title, output_filename, numerical_labels=True, sort_dict=None):
+def plot_histogram(category, title, output_filename, numerical_labels=True, sort_dict=None, language='pl'):
     data = histograms_dict[category]
     if sort_dict:
         data = OrderedDict(sorted(data.items(), key=lambda x: sort_dict[x]))
@@ -27,11 +27,11 @@ def plot_histogram(category, title, output_filename, numerical_labels=True, sort
     if not numerical_labels:
         plt.xticks(x_data, data.keys(), rotation=45)
 
-    plt.savefig(os.path.join(OUTPUT_PATH, output_filename))
+    plt.savefig(os.path.join(OUTPUT_PATH, language, output_filename))
     plt.clf()
 
 
-def plot_piechart(category, title, output_filename, sort_dict=None):
+def plot_piechart(category, title, output_filename, sort_dict=None, language='pl'):
     data = histograms_dict[category]
     if sort_dict:
         data_items_with_order_parameter = [(i[0], i[1], sort_dict[i[0]]) for i in data.items()]
@@ -46,11 +46,11 @@ def plot_piechart(category, title, output_filename, sort_dict=None):
     plt.axis('equal')
     plt.legend(data.keys(), loc='lower center')
 
-    plt.savefig(os.path.join(OUTPUT_PATH, output_filename))
+    plt.savefig(os.path.join(OUTPUT_PATH, language, output_filename))
     plt.show()
 
 
-def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png'):
+def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png', language='pl'):
     labels = ['preceding', 'truetemp mean', 'truetemp std']
 
     preceding_data = []
@@ -67,7 +67,7 @@ def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.pn
     plt.xticks(range(3), ('M-T', 'T-(M/C)', 'C-T'), fontsize=12)
     plt.grid(True)
 
-    plt.title('Średnia odpowiedź na Truetemp w różnych wersjach ankiety', fontsize=20, y=1.05)
+    plt.title('Średnia odpowiedź na Truetemp w różnych wersjach ankiety {}'.format(language.upper()), fontsize=20, y=1.05)
     plt.xlabel('Wersja ankiety\n(M-Moneta, T-Truetemp, C-Chemiczka)', fontsize=15)
     plt.ylabel('Średni wynik Truetempa\n(-1.0-nie zgadzam się, 1.0-zgadzam się)', fontsize=15)
 
@@ -78,7 +78,7 @@ def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.pn
 
     plt.ylim(-2, 2)
     plt.xlim(-.1, 2.1)
-    plt.savefig(os.path.join(OUTPUT_PATH, filename))
+    plt.savefig(os.path.join(OUTPUT_PATH, language, filename))
 
 
 if __name__ == '__main__':
@@ -107,5 +107,5 @@ if __name__ == '__main__':
     plt.bar(edges[:-1], hist, width=50, align='edge')
     plt.xlim(min(edges), max(edges))
 
-    plt.savefig(os.path.join(OUTPUT_PATH, 'total_time.png'))
+    plt.savefig(os.path.join(OUTPUT_PATH, 'pl', 'total_time.png'))
     plt.clf()
