@@ -1,7 +1,7 @@
 import csv, glob, os, json, re
 from collections import defaultdict
 
-from config import DATA_PATH, REMOVE_CATEGORIES, FILTER_OUT_LOW_PHILOSOPHY_KNOWLEDGE
+from config import DATA_PATH, REMOVE_CATEGORIES_PL, FILTER_OUT_LOW_PHILOSOPHY_KNOWLEDGE
 from translation import SCORE_DICT_PL, TIME_DICT_PL
 
 
@@ -52,7 +52,7 @@ def read_data(language='pl'):
             group_id = '-'.join(headers[8:10])
 
             for line in reader:
-                interviewee = {key: val for key, val in zip(headers, line) if val and key not in REMOVE_CATEGORIES}
+                interviewee = {key: val for key, val in zip(headers, line) if val and key not in REMOVE_CATEGORIES_PL}
                 is_not_philosopher = not (
                             FILTER_OUT_LOW_PHILOSOPHY_KNOWLEDGE and has_low_philosophy_knowledge(interviewee))
                 if is_survey_finished(interviewee) and is_not_philosopher:

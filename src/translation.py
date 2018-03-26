@@ -1,3 +1,10 @@
+STORY_TO_PERSON = {
+    'ch': 'Chemist',
+    'c': 'Coinflip',
+    't': 'Truetemp'
+}
+
+
 SCORE_DICT_PL = {
     'Zdecydowanie się nie zgadzam': -2,
     'Nie zgadzam się': -1,
@@ -95,4 +102,14 @@ RENAMING_DICT_EN = {
     'M6': 'native_speaker',
 }
 
-BOOLEAN_DICT_EN = {'Yes': True, 'No': False}
+RENAMING_DICT_PL = dict()
+
+def get_renaming_dict(language):
+    if language == 'pl':
+        return RENAMING_DICT_PL
+    elif language == 'en':
+        return RENAMING_DICT_EN
+    else:
+        raise Exception
+
+BOOLEAN_DICT = {'Yes': True, 'No': False}
