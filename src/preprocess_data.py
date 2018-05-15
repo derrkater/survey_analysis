@@ -1,9 +1,8 @@
 import re, glob, os
 import pandas as pd
 
-from config import DATA_PATH
-from translation import STORY_TO_PERSON
-
+from config import DATA_PATH, get_time_threshold, MIN_YEAR, MAX_YEAR, get_remove_categories
+from translation import STORY_TO_PERSON, get_score_dict, get_education_dict, get_renaming_dict, get_boolean_dict
 
 def browse_data(df):
     print(df.columns)
@@ -20,21 +19,27 @@ def browse_data(df):
 
 
 def preprocess_initial(df, language):
-    from config import get_remove_categories
-    from translation import get_score_dict, get_education_dict, get_renaming_dict, BOOLEAN_DICT
 
     score_dict = get_score_dict(language)
+    boolean_dict = get_boolean_dict(language)
     education_dict = get_education_dict(language)
 
     return df.rename(columns=get_renaming_dict(language)) \
-        .dropna(axis=1) \
         .drop(columns=get_remove_categories(language)) \
+        .dropna(axis=1, how='all') \
         .applymap(lambda x: score_dict.get(x, x)) \
-        .applymap(lambda x: BOOLEAN_DICT.get(x, x)) \
+        .applymap(lambda x: boolean_dict.get(x, x)) \
         .applymap(lambda x: education_dict.get(x, x))
 
 
 def preprocess_control_questions(df, control_1, control_2):
+    """
+    Drops interviewees that have answered false in control questions (did not read the story).
+    :param df:
+    :param control_1: 'ControlTruetemp' or 'ControlCoinflip' or 'ControlChemist'
+    :param control_2: 'ControlTruetemp' or 'ControlCoinflip' or 'ControlChemist'
+    :return: df
+    """
     df = df[df[control_1]]
     df = df[df[control_2]]
     return df.drop(columns=[control_1, control_2])
@@ -74,13 +79,10 @@ def preprocess(df, language):
     :param df: pandas DataFrame with columns:
         * pl    "id","submitdate","lastpage","startlanguage","startdate","datestamp","ipaddr","refurl","ch","t","rok","plec","wyksztalcenie","filozofia","filozofia2","interviewtime","groupTime8020","chTime","groupTime8021","tTime","groupTime8022","rokTime","plecTime","wyksztalcenieTime","filozofiaTime","filozofia2Time"
         * en    "id","submitdate","lastpage","startlanguage","startdate","datestamp","ipaddr","refurl","M1","M2","M3","M3[other]","M4","M5","M6","I1","Truetemp","ControlTruetemp","TruetempKnow","I2","Coinflip","ControlCoinflip","CoinflipKnow","interviewtime","groupTime8106","M1Time","M2Time","M3Time","M4Time","M5Time","M6Time","groupTime8109","I1Time","groupTime8110","TruetempTime","ControlTruetempTime","TruetempKnowTime","groupTime8108","I2Time","groupTime8107","CoinflipTime","ControlCoinflipTime","CoinflipKnowTime"
-    :param language:
+    :param language: 'en'/'pl'
     :return:
     """
-    from config import get_time_threshold, MIN_YEAR, MAX_YEAR
-    time_threshold = get_time_threshold(language)
 
-    df = preprocess_initial(df, language)
 
     if language == 'pl':
         story_1, story_2 = df.columns[8:10]
@@ -97,6 +99,10 @@ def preprocess(df, language):
     else:
         raise Exception
 
+    df = preprocess_initial(df, language)
+    print(df.columns)
+
+    time_threshold = get_time_threshold(language)
     df = preprocess_not_active(df)
     df = preprocess_by_interviewee_age(df, MIN_YEAR, MAX_YEAR)
     df = preprocess_by_interview_time(df, time_threshold)
@@ -112,7 +118,7 @@ def preprocess_pipeline(language, verbose=False):
     dfs = dict()
     for file in files:
         df = pd.read_csv(file)
-        df, person_1, person_2 = preprocess(df, 'en')
+        df, person_1, person_2 = preprocess(df, language)
 
         if verbose:
             browse_data(df)

@@ -36,7 +36,9 @@ EDUCATION_DICT_PL = {
     'zasadnicze zawodowe': 1,
     'średnie': 2,
     'wyższe (licencjat, inżynier, magister)': 3,
-    'wyższe (doktorat lub więcej)': 4
+    'wyższe (doktorat lub więcej)': 4,
+
+    'uczestniczyłem/łam w zajęciach z filozofii': 1
 }
 
 EDUCATION_DICT_EN = {
@@ -102,7 +104,13 @@ RENAMING_DICT_EN = {
     'M6': 'native_speaker',
 }
 
-RENAMING_DICT_PL = dict()
+RENAMING_DICT_PL = {
+    'plec': 'gender',
+    'rok': 'year',
+    'wyksztalcenie': 'education',
+    'filozofia': 'philosophy_education',
+    'filozofia2': 'philosophy_education_level'
+}
 
 def get_renaming_dict(language):
     if language == 'pl':
@@ -112,4 +120,14 @@ def get_renaming_dict(language):
     else:
         raise Exception
 
-BOOLEAN_DICT = {'Yes': True, 'No': False}
+BOOLEAN_DICT_EN = {'Yes': True, 'No': False}
+
+BOOLEAN_DICT_PL = {'Tak': True, 'Nie': False}
+
+def get_boolean_dict(language):
+    if language == 'pl':
+        return BOOLEAN_DICT_PL
+    elif language == 'en':
+        return BOOLEAN_DICT_EN
+    else:
+        raise Exception

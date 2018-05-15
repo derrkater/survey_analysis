@@ -50,7 +50,7 @@ def plot_piechart(category, title, output_filename, sort_dict=None, language='pl
     plt.show()
 
 
-def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png', language='pl'):
+def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png', language='pl', format='png'):
     labels = ['preceding', 'truetemp mean', 'truetemp std']
 
     preceding_data = []
@@ -73,12 +73,15 @@ def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.pn
 
     annotation_positions = ((.1, .1), (.1, .1), (-.53, -.05))
     d = 0.1
+    annotation_artists = []
     for x, y, s, a in zip(range(3), answer, std, annotation_positions):
-        plt.annotate('{:.3f} $\pm$ {:.3f}'.format(y, s), xy=[x + d, y + d], fontsize=12)
+        artist = plt.annotate('{:.3f} $\pm$ {:.3f}'.format(y, s), xy=[x + d, y + d], fontsize=12)
+        annotation_artists.append(artist)
 
     plt.ylim(-2, 2)
     plt.xlim(-.1, 2.1)
-    plt.savefig(os.path.join(OUTPUT_PATH, language, filename))
+    plt.savefig(os.path.join(OUTPUT_PATH, language, '{}.{}'.format(filename, format)), format=format,
+                bbox_extra_artists=annotation_artists, bbox_inches='tight')
 
 
 if __name__ == '__main__':
