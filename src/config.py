@@ -10,7 +10,8 @@ REMOVE_CATEGORIES_PL = [
     'startdate',  #
     'datestamp',  #
     'ipaddr',  # irrelevant
-    'refurl'  # irrelevant
+    'refurl',  # irrelevant
+    'philosophy_education'
 ]
 
 REMOVE_CATEGORIES_EN = [
@@ -20,7 +21,9 @@ REMOVE_CATEGORIES_EN = [
     'startdate',
     'datestamp',
     'ipaddr',
-    'lastpage'
+    'refurl',
+    'education_other',
+    'philosophy_education'
 ]
 
 def get_remove_categories(language):

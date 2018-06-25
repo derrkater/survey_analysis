@@ -50,7 +50,15 @@ def plot_piechart(category, title, output_filename, sort_dict=None, language='pl
     plt.show()
 
 
-def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.png', language='pl', format='png'):
+def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp', language='pl', format='png'):
+    c = 'Coinflip'
+    t = 'Truetemp'
+    ch = 'Chemist'
+
+    data = {'c': list(data['{}-{}'.format(c, t)]),
+                 'none': list(data['{}-{}'.format(t, ch)]) + list(data['{}-{}'.format(t, c)]),
+                 'ch': list(data['{}-{}'.format(ch, t)])}
+
     labels = ['preceding', 'truetemp mean', 'truetemp std']
 
     preceding_data = []
@@ -68,19 +76,19 @@ def plot_truetemp_dependence_on_preceding_story(data, filename='mean_truetemp.pn
     plt.grid(True)
 
     plt.title('Średnia odpowiedź na Truetemp w różnych wersjach ankiety {}'.format(language.upper()), fontsize=20, y=1.05)
-    plt.xlabel('Wersja ankiety\n(M-Moneta, T-Truetemp, C-Chemiczka)', fontsize=15)
-    plt.ylabel('Średni wynik Truetempa\n(-1.0-nie zgadzam się, 1.0-zgadzam się)', fontsize=15)
+    plt.xlabel('Wersja ankiety\n(M-Moneta, T-Truetemp, C-Chemiczka)', fontsize=20)
+    plt.ylabel('Średni wynik Truetempa\n(-1.0-nie zgadzam się, 1.0-zgadzam się)', fontsize=20)
 
     annotation_positions = ((.1, .1), (.1, .1), (-.53, -.05))
     d = 0.1
     annotation_artists = []
     for x, y, s, a in zip(range(3), answer, std, annotation_positions):
-        artist = plt.annotate('{:.3f} $\pm$ {:.3f}'.format(y, s), xy=[x + d, y + d], fontsize=12)
+        artist = plt.annotate('{:.3f} $\pm$ {:.3f}'.format(y, s), xy=[x + d, y + d], fontsize=20)
         annotation_artists.append(artist)
 
     plt.ylim(-2, 2)
     plt.xlim(-.1, 2.1)
-    plt.savefig(os.path.join(OUTPUT_PATH, language, '{}.{}'.format(filename, format)), format=format,
+    plt.savefig(os.path.join(OUTPUT_PATH, language, '{}_{}.{}'.format(filename, language, format)), format=format,
                 bbox_extra_artists=annotation_artists, bbox_inches='tight')
 
 

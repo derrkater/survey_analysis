@@ -48,7 +48,10 @@ EDUCATION_DICT_EN = {
     'Some College': 2,
     "Bachelor's degree": 3,
     "Master's degree": 4,
-    'Advanced Graduate work or Doctoral degree': 5
+    'Advanced Graduate work or Doctoral degree': 5,
+
+    'I have taken some philosophy classes': 1,
+    'Bachelor of Philosophy': 2
 }
 
 
@@ -102,6 +105,9 @@ RENAMING_DICT_EN = {
     'M4': 'philosophy_education',
     'M5': 'philosophy_education_level',
     'M6': 'native_speaker',
+    'ChemistKnow': 'Chemist',
+    'TruetempKnow': 'Truetemp',
+    'CoinflipKnow': 'Coinflip'
 }
 
 RENAMING_DICT_PL = {
@@ -109,7 +115,10 @@ RENAMING_DICT_PL = {
     'rok': 'year',
     'wyksztalcenie': 'education',
     'filozofia': 'philosophy_education',
-    'filozofia2': 'philosophy_education_level'
+    'filozofia2': 'philosophy_education_level',
+    'ch': 'Chemist',
+    'c': 'Coinflip',
+    't': 'Truetemp'
 }
 
 def get_renaming_dict(language):
